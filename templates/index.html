@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Dự đoán điểm học sinh</title>
+  <style>
+    body { font-family: Arial; margin: 40px; }
+    h1 { color: #2b6cb0; }
+    input, button { padding: 8px; margin: 5px; }
+    .result { margin-top: 20px; color: #2f855a; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Dự đoán điểm học sinh bằng mô hình R</h1>
+  <form method="POST">
+    <label>Nhập số giờ học:</label>
+    <input type="number" step="0.1" name="hours" required>
+    <button type="submit">Dự đoán</button>
+  </form>
+
+  {% if predicted %}
+  <div class="result">
+    <p>Giờ học: {{ hours }}</p>
+    <p>Điểm dự đoán: {{ predicted }}</p>
+  </div>
+  {% endif %}
+</body>
+</html>
