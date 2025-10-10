@@ -1,14 +1,37 @@
 import pandas as pd
 
-# Tạo dữ liệu giả lập về điểm sinh viên
-data = {
-    "Student": [f"SV{i}" for i in range(1, 21)],
-    "Hours_Studied": [2, 3, 4, 5, 1, 6, 3, 4, 7, 8, 5, 6, 9, 10, 8, 7, 4, 3, 2, 1],
-    "Score": [35, 45, 50, 55, 25, 65, 48, 52, 70, 80, 60, 68, 85, 88, 78, 75, 54, 42, 30, 20]
-}
+# # URL file gốc từ GitHub (bản UCI Student Performance)
+# url_mat = "https://raw.githubusercontent.com/arunk13/MSDA-Assignments/master/IS607Fall2015/Assignment3/student-mat.csv"
+# url_por = "https://raw.githubusercontent.com/arunk13/MSDA-Assignments/master/IS607Fall2015/Assignment3/student-por.csv"
 
-df = pd.DataFrame(data)
-df.to_csv("student_scores.csv", index=False)
+# # Đọc dữ liệu
+# df_mat = pd.read_csv(url_mat, sep=';')
+# df_por = pd.read_csv(url_por, sep=';')
 
-print("✅ Đã tạo file student_scores.csv")
-print(df.head())
+# # Gộp lại thành 1 dataset chung
+# df_all = pd.concat([df_mat, df_por], axis=0).reset_index(drop=True)
+
+# # Lưu ra file CSV tại cùng thư mục đang chạy script
+# df_all.to_csv("student_performance.csv", index=False)
+
+# print("✅ Đã lưu file: student_performance.csv")
+# print("Số dòng:", len(df_all))
+# print("Các cột:", list(df_all.columns))
+
+
+df = pd.read_csv("student_performance.csv")
+
+# Các cột cần giữ
+cols_to_keep = [
+    'studytime', 'failures',
+    'internet',
+    'G1', 'G2', 'G3'
+]
+
+df_clean = df[cols_to_keep]
+df_clean.to_csv("student_performance_clean.csv", index=False)
+
+print("✅ Đã lưu file student_performance_clean.csv")
+print("Số dòng:", len(df_clean))
+print("Số cột:", len(df_clean.columns))
+print("Các cột:", list(df_clean.columns))
