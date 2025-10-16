@@ -30,7 +30,7 @@ clean_special_chars <- function(text) {
 }
 
 analyze_with_gemini <- function(student_info) {
-  api_key <- "YOUR_KEY " # Thay YOUR_KEY bằng khóa API thực tế của bạn
+  api_key <- "YOUR_API" # Thay YOUR_KEY bằng khóa API thực tế của bạn
   if (api_key == "") {
     return("⚠️ Chưa thiết lập GEMINI_API_KEY. Hãy dùng Sys.setenv(GEMINI_API_KEY='YOUR_KEY').")
   }
