@@ -5,3 +5,7 @@
 `install.packages("xgboost", repos="https://cran.r-project.org")`
 
 `install.packages("Metrics")`
+
+`install.packages(c("httr", "jsonlite"))`
+
+`install.packages("shiny", repos = "https://cloud.r-project.org")`
