@@ -1,69 +1,67 @@
 library(shiny)
-library(xgboost)
+# library(xgboost) # KHÔNG CÒN CẦN THIẾT
 library(ggplot2)
 library(httr)
 library(jsonlite)
 
 # ===============================================================
-# 🔑 Hàm gọi API Gemini
+# 🔑 Hàm gọi API Gemini (Giữ nguyên)
 # ===============================================================
 
 clean_special_chars <- function(text) {
   if (is.null(text) || text == "") return("")
-  
-  # Thay in đậm **...** thành <b>...</b>
   text <- gsub("\\*\\*(.*?)\\*\\*", "<b>\\1</b>", text)
-  
-  # Thay bullet list "* " hoặc "- " thành "• "
   text <- gsub("(^|\\n)[\\*\\-]\\s+", "\\1• ", text)
-  
-  # Thay tiêu đề Markdown "## " thành in đậm
   text <- gsub("(^|\\n)#+\\s*(.*?)\\n", "\\1<b>\\2</b><br/>", text)
-  
-  # Thay các dấu xuống dòng bằng <br/> để hiển thị đúng HTML
   text <- gsub("\\n", "<br/>", text)
-  
-  # Loại bỏ các ký tự Markdown đơn lẻ còn sót lại
   text <- gsub("\\*", "", text)
-  
   return(text)
 }
 
 analyze_with_gemini <- function(student_info) {
-  api_key <- "GEMINI_API_KEY." # Thay YOUR_KEY bằng khóa API thực tế của bạn
-  if (api_key == "") {
-    return("⚠️ Chưa thiết lập GEMINI_API_KEY.")
+  # ==========================================================
+  # 🚨 BẮT BUỘC: HÃY DÙNG KEY MỚI (ĐÃ KÍCH HOẠT API) TẠI ĐÂY
+  # ==========================================================
+  api_key <- "AIzaSyDOpDFZ8AxCsHpTnMvFvQcXdQzrppPMjwg" # Thay bằng GEMINI_API_KEY mới của bạn
+  
+  if (api_key == "YOUR_NEW_API_KEY_HERE" || api_key == "") {
+    return("⚠️ Vui lòng thiết lập GEMINI_API_KEY mới đã được kích hoạt.")
   }
-
-  url <- "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
-
-  # Prompt ngắn gọn, yêu cầu kết quả súc tích
+  
+  # ==========================================================
+  # SỬA LỖI 404: Dùng mô hình mới nhất "gemini-1.5-pro-latest"
+  # và endpoint "v1beta"
+  # ==========================================================
+  url <- "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-latest:generateContent"
+  
   prompt_text <- paste(
     "Phân tích nhanh tính cách và xu hướng học tập của học sinh dựa trên dữ liệu:",
     student_info,
     "\nViết ngắn gọn, hay ho, thêm icon, nói chuyện dễ thương, chỉ nêu: điểm mạnh, điểm yếu, xu hướng học và gợi ý cải thiện."
   )
-  print(paste("Prompt to Gemini:", prompt_text))  # In prompt để debug
+  print(paste("Prompt to Gemini:", prompt_text)) 
 
   body <- list(
     contents = list(list(parts = list(list(text = prompt_text)))),
     generationConfig = list(
-      maxOutputTokens = 10000,    # giới hạn token đầu ra (ngắn hơn)
-      temperature = 0.9,        # giảm độ sáng tạo, giúp câu trả lời súc tích
+      maxOutputTokens = 10000, 
+      temperature = 0.9,
       topP = 0.9
     )
   )
-
+  
   response <- httr::POST(
     url = paste0(url, "?key=", api_key),
     httr::add_headers(`Content-Type` = "application/json"),
     body = jsonlite::toJSON(body, auto_unbox = TRUE)
   )
-
+  
   if (response$status_code != 200) {
+    # In ra nội dung lỗi để debug
+    print(httr::content(response, "text", encoding = "UTF-8"))
     return(paste("❌ Lỗi gọi Gemini API:", response$status_code))
   }
-
+  
   content_data <- httr::content(response, "parsed")
   tryCatch({
     content_data$candidates[[1]]$content$parts[[1]]$text
@@ -71,7 +69,7 @@ analyze_with_gemini <- function(student_info) {
 }
 
 # ===============================================================
-# 1️⃣ Đọc dữ liệu và chuẩn bị
+# 1️⃣ Đọc dữ liệu và chuẩn bị (Giữ nguyên)
 # ===============================================================
 if (!file.exists("student_performance_clean.csv")) {
   stop("Không tìm thấy file student_performance_clean.csv!")
@@ -87,30 +85,32 @@ train_index <- sample(1:nrow(data), 0.75*nrow(data))
 train_data <- data[train_index, ]
 test_data  <- data[-train_index, ]
 
-train_X <- as.matrix(train_data[, c('studytime','failures','internet','G1','G2')])
+# THAY ĐỔI: Chúng ta cần G3 trong train_data, nhưng cũng cần y riêng để đánh giá
 train_y <- train_data$G3
-
-test_X <- as.matrix(test_data[, c('studytime','failures','internet','G1','G2')])
-test_y <- test_data$G3
+test_y  <- test_data$G3
 
 # ===============================================================
-# 2️⃣ Huấn luyện mô hình XGBoost
+# 2️⃣ THAY ĐỔI: Huấn luyện mô hình Linear Regression
 # ===============================================================
-dtrain <- xgb.DMatrix(data = train_X, label = train_y)
-dtest  <- xgb.DMatrix(data = test_X,  label = test_y)
 
-params <- list(objective="reg:squarederror", eta=0.1, max_depth=5, subsample=0.8)
-model <- xgb.train(params=params, data=dtrain, nrounds=100, watchlist=list(train=dtrain), verbose=0)
+# Dùng công thức G3 ~ . (dự đoán G3 dựa trên tất cả các cột còn lại)
+# Hàm lm() sử dụng data.frame (train_data)
+model <- lm(G3 ~ ., data = train_data)
+
+# Bạn có thể xem tóm tắt mô hình trong Console
+print(summary(model))
 
 # ===============================================================
-# 3️⃣ Hàm tính RMSE và R²
+# 3️⃣ Hàm tính RMSE và R² (Giữ nguyên) và Đánh giá
 # ===============================================================
 rmse_fun <- function(y_true, y_pred) sqrt(mean((y_true - y_pred)^2))
 r2_fun   <- function(y_true, y_pred) 1 - sum((y_true - y_pred)^2)/sum((y_true - mean(y_true))^2)
 
-pred_train <- predict(model, dtrain)
-pred_test  <- predict(model, dtest)
+# THAY ĐỔI: Dự đoán bằng mô hình lm
+pred_train <- predict(model, newdata = train_data)
+pred_test  <- predict(model, newdata = test_data)
 
+# Tính toán lỗi (dùng train_y và test_y đã định nghĩa ở mục 1)
 rmse_train <- rmse_fun(train_y, pred_train)
 r2_train   <- r2_fun(train_y, pred_train)
 
@@ -118,10 +118,10 @@ rmse_test  <- rmse_fun(test_y, pred_test)
 r2_test    <- r2_fun(test_y, pred_test)
 
 # ===============================================================
-# 4️⃣ Giao diện Shiny
+# 4️⃣ Giao diện Shiny (Giữ nguyên)
 # ===============================================================
 ui <- fluidPage(
-  titlePanel("📊 Dự đoán điểm G3 học sinh + 🧠 Phân tích Gemini"),
+  titlePanel("📊 Dự đoán điểm G3 học sinh + 🧠 Phân tích Gemini (Dùng Linear)"), # Sửa tiêu đề
   
   sidebarLayout(
     sidebarPanel(
@@ -133,7 +133,7 @@ ui <- fluidPage(
       actionButton("predict_btn", "✅ Dự đoán"),
       actionButton("gemini_btn", "🧩 Phân tích Gemini"),
       hr(),
-      h4("Đánh giá mô hình:"),
+      h4("Đánh giá mô hình (Linear):"), # Sửa tiêu đề
       verbatimTextOutput("model_metrics")
     ),
     
@@ -155,7 +155,7 @@ ui <- fluidPage(
 # ===============================================================
 server <- function(input, output, session) {
   
-  # Hiển thị RMSE và R²
+  # Hiển thị RMSE và R² (Tự động cập nhật)
   output$model_metrics <- renderText({
     paste0(
       "Train: RMSE=", round(rmse_train,2), ", R²=", round(r2_train,3), "\n",
@@ -163,7 +163,7 @@ server <- function(input, output, session) {
     )
   })
   
-  # Dự đoán khi nhấn nút
+  # THAY ĐỔI: Dự đoán khi nhấn nút (dùng logic của lm)
   predicted <- eventReactive(input$predict_btn, {
     new_data <- data.frame(
       studytime = input$studytime,
@@ -172,7 +172,8 @@ server <- function(input, output, session) {
       G1        = input$G1,
       G2        = input$G2
     )
-    predict(model, xgb.DMatrix(as.matrix(new_data)))
+    # THAY ĐỔI: Dùng predict() cho lm với 'newdata' là data.frame
+    predict(model, newdata = new_data)
   })
   
   output$prediction <- renderText({
@@ -180,29 +181,32 @@ server <- function(input, output, session) {
     paste0("Điểm G3 dự đoán: ", round(predicted(), 2))
   })
   
-  # Khi nhấn nút phân tích Gemini
+# Logic gọi Gemini (ĐÃ SỬA LỖI)
   observeEvent(input$gemini_btn, {
-    req(predicted())
+    req(predicted()) # Yêu cầu phải có dự đoán trước
     
     student_info <- paste(
       "Thời gian học:", input$studytime,
       "| Số lần trượt:", input$failures,
       "| Internet:", ifelse(input$internet==1, "Có", "Không"),
-      "| Điểm G1:", input$G1,
+      "| Điểm G1:", input$G1,  # <--- ĐÃ SỬA
       "| Điểm G2:", input$G2,
       "| Dự đoán điểm G3:", round(predicted(), 2)
     )
     
+    # Hiển thị thông báo "Đang tải"
     output$gemini_analysis <- renderText({"⏳ Đang phân tích bằng Gemini..."})
     
+    # Gọi API
     analysis_result <- analyze_with_gemini(student_info)
     
+    # Hiển thị kết quả
     output$gemini_analysis <- renderUI({
-  HTML(clean_special_chars(analysis_result))
+      HTML(clean_special_chars(analysis_result))
     })
   })
   
-  # Biểu đồ Actual vs Predicted (train & test)
+  # Biểu đồ Actual vs Predicted (Giữ nguyên, nó tự động cập nhật)
   output$pred_plot <- renderPlot({
     plot_data <- rbind(
       data.frame(Actual=train_y, Predicted=pred_train, Set="Train"),
@@ -212,7 +216,7 @@ server <- function(input, output, session) {
     ggplot(plot_data, aes(x=Predicted, y=Actual, color=Set)) +
       geom_point(size=4, alpha=0.7) +
       geom_smooth(method="lm", se=FALSE, size=1.2) +
-      ggtitle("Biểu đồ: Dự đoán vs Thực tế (G3)", subtitle="Mô hình XGBoost") +
+      ggtitle("Biểu đồ: Dự đoán vs Thực tế (G3)", subtitle="Mô hình Linear Regression") + # Sửa tiêu đề
       xlab("Predicted G3") + ylab("Actual G3") +
       theme_light(base_size = 16)
   })
