@@ -22,7 +22,7 @@ analyze_with_gemini <- function(student_info) {
   # ==========================================================
   # 🚨 BẮT BUỘC: HÃY DÙNG KEY MỚI (ĐÃ KÍCH HOẠT API) TẠI ĐÂY
   # ==========================================================
-  api_key <- "API" # Thay bằng GEMINI_API_KEY mới của bạn
+  api_key <- "AIzaSyC2yA-VkIroULlcEkcb3yAIH7haoqLo91w" # Thay bằng GEMINI_API_KEY mới của bạn
   
   if (api_key == "YOUR_NEW_API_KEY_HERE" || api_key == "") {
     return("⚠️ Vui lòng thiết lập GEMINI_API_KEY mới đã được kích hoạt.")
