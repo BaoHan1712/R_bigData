@@ -22,7 +22,7 @@ analyze_with_gemini <- function(student_info) {
   # ==========================================================
   # 🚨 BẮT BUỘC: HÃY DÙNG KEY MỚI (ĐÃ KÍCH HOẠT API) TẠI ĐÂY
   # ==========================================================
-  api_key <- "AIzaSyDOpDFZ8AxCsHpTnMvFvQcXdQzrppPMjwg" # Thay bằng GEMINI_API_KEY mới của bạn
+  api_key <- "AIzaSyC2yA-VkIroULlcEkcb3yAIH7haoqLo91w" # Thay bằng GEMINI_API_KEY mới của bạn
   
   if (api_key == "YOUR_NEW_API_KEY_HERE" || api_key == "") {
     return("⚠️ Vui lòng thiết lập GEMINI_API_KEY mới đã được kích hoạt.")
@@ -32,7 +32,7 @@ analyze_with_gemini <- function(student_info) {
   # SỬA LỖI 404: Dùng mô hình mới nhất "gemini-1.5-pro-latest"
   # và endpoint "v1beta"
   # ==========================================================
-  url <- "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-latest:generateContent"
+  url <- "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
   
   prompt_text <- paste(
     "Phân tích nhanh tính cách và xu hướng học tập của học sinh dựa trên dữ liệu:",
